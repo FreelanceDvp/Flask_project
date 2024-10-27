@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, render_template, request, redirect, url_for, send_file
 import sqlite3
 import json
@@ -6,6 +9,7 @@ import tempfile
 import random
 import string
 import math
+
 
 DATABASE_FILE = "ids_database.db"
 
@@ -111,5 +115,6 @@ def add():
     return render_template("add.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
