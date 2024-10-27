@@ -112,6 +112,12 @@ def add():
 
     return render_template("add.html")
 
+@app.route('/import_data')
+def import_data():
+    # Importer le script d'insertion de données
+    import all_data
+    return "Importation des données terminée"
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
