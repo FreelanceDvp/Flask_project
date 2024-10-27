@@ -1,5 +1,5 @@
 altair==5.4.1
-altgraph @ file:///AppleInternal/Library/BuildRoots/bd680bd8-563b-11ef-bf16-8a553ba56670/Library/Caches/com.apple.xbs/Sources/python3/altgraph-0.17.2-py2.py3-none-any.whl
+altgraph==0.17.2
 asgiref==3.8.1
 attrs==24.2.0
 beautifulsoup4==4.12.2
@@ -11,7 +11,7 @@ click==8.1.7
 Django==4.2.16
 et-xmlfile==1.1.0
 Flask==3.0.3
-future @ file:///AppleInternal/Library/BuildRoots/bd680bd8-563b-11ef-bf16-8a553ba56670/Library/Caches/com.apple.xbs/Sources/python3/future-0.18.2-py3-none-any.whl
+future==0.18.2
 gitdb==4.0.11
 GitPython==3.1.43
 idna==3.6
@@ -20,7 +20,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.4
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
-macholib @ file:///AppleInternal/Library/BuildRoots/bd680bd8-563b-11ef-bf16-8a553ba56670/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
+macholib==1.15.2
 markdown-it-py==3.0.0
 MarkupSafe==3.0.1
 mdurl==0.1.2
@@ -46,7 +46,7 @@ referencing==0.35.1
 requests==2.31.0
 rich==13.9.2
 rpds-py==0.20.0
-six @ file:///AppleInternal/Library/BuildRoots/bd680bd8-563b-11ef-bf16-8a553ba56670/Library/Caches/com.apple.xbs/Sources/python3/six-1.15.0-py2.py3-none-any.whl
+six==1.15.0
 smmap==5.0.1
 soupsieve==2.5
 sqlparse==0.5.1
