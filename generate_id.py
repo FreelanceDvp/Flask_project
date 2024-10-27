@@ -1,20 +1,16 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, send_file
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy # type: ignore
 import json
 import tempfile
 import random
 import string
 import math
 
-# Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
-
 app = Flask(__name__)
 
-# Configuration de la base de données PostgreSQL via SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+# Configuration directe de la base de données PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:iPFNYhFxLndfgavAPKYgfDcDwFifwknr@junction.proxy.rlwy.net:27748/railway'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialiser SQLAlchemy
@@ -112,10 +108,11 @@ def add():
 
     return render_template("add.html")
 
+# Route pour importer toutes les données depuis le script all_data.py
 @app.route('/import_data')
 def import_data():
     # Importer le script d'insertion de données
-    import all_data
+    import all_data  # Assurez-vous que all_data.py est bien configuré pour PostgreSQL
     return "Importation des données terminée"
 
 if __name__ == "__main__":
