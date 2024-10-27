@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un nouvel ID</title>
+</head>
+<body>
+    <h1>Ajouter un nouvel ID</h1>
+
+    <form action="/add" method="POST">
+        <label for="section">Section:</label>
+        <select name="section" id="section" required>
+            <option value="Plantes">Plantes</option>
+            <option value="Maladies">Maladies</option>
+            <option value="Conseils">Conseils</option>
+            <option value="Événements">Événements</option>
+        </select><br>
+
+        <label for="nom_produit">Nom du produit:</label>
+        <input type="text" name="nom_produit" id="nom_produit" required><br>
+
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">Retour à l'accueil</a></p>
+</body>
+</html>
