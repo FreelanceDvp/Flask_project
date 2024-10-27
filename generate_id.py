@@ -8,22 +8,19 @@ import random
 import string
 import math
 
-# Charge les variables d'environnement depuis le fichier .env
+# Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
 
 app = Flask(__name__)
 
-# Configuration de la base de données en utilisant SQLAlchemy avec PostgreSQL
+# Configuration de la base de données PostgreSQL via SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Initialiser SQLAlchemy
 db = SQLAlchemy(app)
 
-# Créez les tables dans la base de données si elles n'existent pas encore
-with app.app_context():
-    db.create_all()
-
-# Définissez vos modèles ici (exemple de modèle)
+# Définir le modèle IDS
 class IDS(db.Model):
     __tablename__ = 'ids'
     id = db.Column(db.String, primary_key=True)
@@ -44,17 +41,18 @@ def index():
     page = int(request.args.get('page', 1))
     items_per_page = 10
 
-    query = ID.query
+    # Construire la requête de base
+    query = IDS.query
 
-    # Filtrage par section si spécifié
+    # Filtrage par section
     if section and section != "Toutes":
         query = query.filter_by(section=section)
     
-    # Recherche dans les données
+    # Recherche dans les données JSON
     if search:
-        query = query.filter(ID.data.like(f"%{search}%"))
+        query = query.filter(IDS.data.like(f"%{search}%"))
 
-    # Tri
+    # Tri des données
     if sort_column:
         if sort_order == 'asc':
             query = query.order_by(db.text(f"json_extract(data, '$.{sort_column}') ASC"))
@@ -89,7 +87,7 @@ def export_section(section):
     if not section:
         return "Veuillez spécifier une section à exporter", 400
 
-    items = ID.query.filter_by(section=section).all()
+    items = IDS.query.filter_by(section=section).all()
     export_data = [{"id": item.id, **json.loads(item.data)} for item in items]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{section}_export.json", mode='w', encoding='utf-8') as temp_file:
@@ -106,7 +104,7 @@ def add():
         data = {key: request.form[key] for key in request.form if key != 'section'}
         new_id = ''.join(random.choices(string.ascii_uppercase, k=3)) + ''.join(random.choices(string.digits, k=3)) + ''.join(random.choices(string.ascii_uppercase, k=3))
 
-        new_item = ID(id=new_id, section=section, data=json.dumps(data))
+        new_item = IDS(id=new_id, section=section, data=json.dumps(data))
         db.session.add(new_item)
         db.session.commit()
 
