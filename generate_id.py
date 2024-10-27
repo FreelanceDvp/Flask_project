@@ -2,68 +2,68 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, render_template, request, redirect, url_for, send_file
-import sqlite3
-import json
+from flask_sqlalchemy import SQLAlchemy
 import os
+import json
 import tempfile
 import random
 import string
 import math
 
-
-DATABASE_FILE = "ids_database.db"
-
-
+# Configuration de l'application Flask et SQLAlchemy
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///ids_database.db")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Modèle de base de données
+class ID(db.Model):
+    __tablename__ = 'ids'
+    id = db.Column(db.String, primary_key=True)
+    section = db.Column(db.String)
+    data = db.Column(db.Text)
+
+# Créer les tables si elles n'existent pas
+with app.app_context():
+    db.create_all()
 
 # Route pour la page d'accueil avec tri, filtrage et pagination
 @app.route('/')
 def index():
-    section = request.args.get('section', '')  # Par défaut, section est vide
+    section = request.args.get('section', '')
     search = request.args.get('search', '').strip()
     sort_column = request.args.get('sort')
     sort_order = request.args.get('order', 'asc')
     page = int(request.args.get('page', 1))
-    items_per_page = 10  # Nombre d'éléments par page
+    items_per_page = 10
 
-    conn = sqlite3.connect("ids_database.db")
-    cursor = conn.cursor()
+    query = ID.query
 
-    # Construire la requête SQL avec filtre et tri
-    query = "SELECT id, section, data FROM ids WHERE 1=1"
-    params = []
-
-    # Appliquer le filtre section uniquement si une section est spécifiée et différente de "Toutes"
+    # Filtrage par section si spécifié
     if section and section != "Toutes":
-        query += " AND section = ?"
-        params.append(section)
-
+        query = query.filter_by(section=section)
+    
+    # Recherche dans les données
     if search:
-        query += " AND data LIKE ?"
-        params.append(f"%{search}%")
+        query = query.filter(ID.data.like(f"%{search}%"))
 
-    # Ajouter le tri si spécifié
+    # Tri
     if sort_column:
-        query += f" ORDER BY json_extract(data, '$.{sort_column}') {sort_order}"
+        if sort_order == 'asc':
+            query = query.order_by(db.text(f"json_extract(data, '$.{sort_column}') ASC"))
+        else:
+            query = query.order_by(db.text(f"json_extract(data, '$.{sort_column}') DESC"))
 
-    # Exécuter la requête pour obtenir le nombre total d'éléments
-    cursor.execute(query, params)
-    total_items = len(cursor.fetchall())
+    # Pagination
+    total_items = query.count()
     total_pages = math.ceil(total_items / items_per_page)
+    ids = query.offset((page - 1) * items_per_page).limit(items_per_page).all()
 
-    # Ajouter la pagination à la requête SQL
-    offset = (page - 1) * items_per_page
-    query += f" LIMIT {items_per_page} OFFSET {offset}"
-
-    cursor.execute(query, params)
-    ids = cursor.fetchall()
-    conn.close()
-
-    # Parse les données JSON pour chaque ligne récupérée
+    # Conversion des données JSON pour l'affichage
     ids_data = []
-    for id, section, data in ids:
-        data_dict = json.loads(data)  # Convertir les données JSON en dictionnaire
-        data_dict.update({"id": id, "section": section})  # Ajouter l'ID et la section
+    for item in ids:
+        data_dict = json.loads(item.data)
+        data_dict.update({"id": item.id, "section": item.section})
         ids_data.append(data_dict)
 
     return render_template(
@@ -82,13 +82,8 @@ def export_section(section):
     if not section:
         return "Veuillez spécifier une section à exporter", 400
 
-    conn = sqlite3.connect("ids_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, data FROM ids WHERE section = ?", (section,))
-    data = cursor.fetchall()
-    conn.close()
-
-    export_data = [{"id": row[0], **json.loads(row[1])} for row in data]
+    items = ID.query.filter_by(section=section).all()
+    export_data = [{"id": item.id, **json.loads(item.data)} for item in items]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{section}_export.json", mode='w', encoding='utf-8') as temp_file:
         json.dump(export_data, temp_file, ensure_ascii=False, indent=4)
@@ -104,11 +99,9 @@ def add():
         data = {key: request.form[key] for key in request.form if key != 'section'}
         new_id = ''.join(random.choices(string.ascii_uppercase, k=3)) + ''.join(random.choices(string.digits, k=3)) + ''.join(random.choices(string.ascii_uppercase, k=3))
 
-        conn = sqlite3.connect("ids_database.db")
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO ids (id, section, data) VALUES (?, ?, ?)", (new_id, section, json.dumps(data)))
-        conn.commit()
-        conn.close()
+        new_item = ID(id=new_id, section=section, data=json.dumps(data))
+        db.session.add(new_item)
+        db.session.commit()
 
         return redirect(url_for('index'))
 
@@ -117,4 +110,3 @@ def add():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
-
