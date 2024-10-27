@@ -1,23 +1,30 @@
-from dotenv import load_dotenv
-load_dotenv()
-
+import os
 from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
-import os
+from dotenv import load_dotenv
 import json
 import tempfile
 import random
 import string
 import math
 
-# Configuration de l'application Flask et SQLAlchemy
+# Charge les variables d'environnement depuis le fichier .env
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///ids_database.db")
+
+# Configuration de la base de données en utilisant SQLAlchemy avec PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
-# Modèle de base de données
-class ID(db.Model):
+# Créez les tables dans la base de données si elles n'existent pas encore
+with app.app_context():
+    db.create_all()
+
+# Définissez vos modèles ici (exemple de modèle)
+class IDS(db.Model):
     __tablename__ = 'ids'
     id = db.Column(db.String, primary_key=True)
     section = db.Column(db.String)
